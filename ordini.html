@@ -76,6 +76,11 @@
     return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  function val(v){
+    if (Array.isArray(v)) return v[0] || '';
+    return v;
+  }
+
   async function loadOrders(password){
     const result = document.getElementById('result');
     result.innerHTML = '<div class="loading">Caricamento ordini…</div>';
@@ -101,16 +106,16 @@
         const dataStr = d ? d.toLocaleString('it-IT') : '';
         html += '<tr>' +
           '<td>' + esc(dataStr) + '</td>' +
-          '<td>' + esc(o.modello) + '</td>' +
-          '<td>' + esc(o.colore) + '</td>' +
-          '<td>' + esc(o.nome) + '</td>' +
-          '<td>' + esc(o.telefono) + '</td>' +
-          '<td>' + esc(o.email) + '</td>' +
-          '<td>' + esc(o.indirizzo) + '</td>' +
-          '<td>' + esc(o.citta) + '</td>' +
-          '<td>' + esc(o.cap) + '</td>' +
-          '<td>' + esc(o.provincia) + '</td>' +
-          '<td>' + esc(o.note) + '</td>' +
+          '<td>' + esc(val(o.modello)) + '</td>' +
+          '<td>' + esc(val(o.colore)) + '</td>' +
+          '<td>' + esc(val(o.nome)) + '</td>' +
+          '<td>' + esc(val(o.telefono)) + '</td>' +
+          '<td>' + esc(val(o.email)) + '</td>' +
+          '<td>' + esc(val(o.indirizzo)) + '</td>' +
+          '<td>' + esc(val(o.citta)) + '</td>' +
+          '<td>' + esc(val(o.cap)) + '</td>' +
+          '<td>' + esc(val(o.provincia)) + '</td>' +
+          '<td>' + esc(val(o.note)) + '</td>' +
         '</tr>';
       }
       html += '</tbody></table></div>';
