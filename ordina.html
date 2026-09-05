@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ordina — Bottega Pelle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #e3dccc; --surface: #d7cab0; --surface-2: #cabb9d;
+    --ink: #221c15; --muted: #6f6553; --brass: #92722f; --brass-strong: #7a5f28;
+    --line: rgba(34,28,21,0.16); --line-strong: rgba(34,28,21,0.32);
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Work Sans', sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:640px; margin:0 auto; padding: clamp(24px,5vw,56px) 20px; }
+  a.back{ color:var(--muted); text-decoration:none; font-size:0.9rem; }
+  a.back:hover{ color:var(--brass-strong); }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(1.7rem,4vw,2.3rem); margin: 18px 0 6px; }
+  .summary{
+    background:var(--surface); border:1px solid var(--line); padding:16px 18px;
+    margin-bottom: 28px; font-family:'IBM Plex Mono', monospace; font-size:0.85rem;
+  }
+  .summary b{ color:var(--brass-strong); }
+  label{ display:block; font-size:0.85rem; color:var(--muted); margin: 18px 0 6px; }
+  input, textarea{
+    width:100%; padding:11px 12px; border:1px solid var(--line-strong); background:#fff;
+    font-family:'Work Sans', sans-serif; font-size:0.95rem; border-radius:2px;
+  }
+  textarea{ min-height:80px; resize:vertical; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:520px){ .row2{ grid-template-columns:1fr; } }
+  button{
+    margin-top:26px; width:100%; padding:14px; background:var(--ink); color:var(--bg);
+    border:none; font-size:1rem; font-weight:500; cursor:pointer; border-radius:2px;
+  }
+  button:hover{ background:var(--brass-strong); }
+  .hp{ position:absolute; left:-9999px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Torna al sito</a>
+  <h1>Completa il tuo ordine</h1>
+  <div class="summary" id="riepilogo">Caricamento modello scelto…</div>
+
+  <form name="ordine" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="grazie.html">
+    <input type="hidden" name="form-name" value="ordine" />
+    <input type="hidden" name="modello" id="f-modello" />
+    <input type="hidden" name="colore" id="f-colore" />
+    <p class="hp"><label>Non compilare questo campo: <input name="bot-field" /></label></p>
+
+    <label for="nome">Nome e cognome</label>
+    <input id="nome" name="nome" required>
+
+    <div class="row2">
+      <div>
+        <label for="telefono">Telefono</label>
+        <input id="telefono" name="telefono" type="tel" required>
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required>
+      </div>
+    </div>
+
+    <label for="indirizzo">Indirizzo di spedizione (via e numero civico)</label>
+    <input id="indirizzo" name="indirizzo" required>
+
+    <div class="row2">
+      <div>
+        <label for="citta">Città</label>
+        <input id="citta" name="citta" required>
+      </div>
+      <div>
+        <label for="cap">CAP</label>
+        <input id="cap" name="cap" required>
+      </div>
+    </div>
+
+    <label for="provincia">Provincia</label>
+    <input id="provincia" name="provincia" required>
+
+    <label for="note">Note (facoltativo)</label>
+    <textarea id="note" name="note"></textarea>
+
+    <button type="submit">Conferma ordine e procedi al pagamento →</button>
+  </form>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const modello = params.get('modello') || 'Emily Grande';
+  const colore = params.get('colore') || '';
+  document.getElementById('f-modello').value = modello;
+  document.getElementById('f-colore').value = colore;
+  document.getElementById('riepilogo').innerHTML =
+    'Modello: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Prezzo: <b>€68 — spedizione inclusa</b>';
+
+  document.querySelector('form[name="ordine"]').addEventListener('submit', function(){
+    this.action = 'grazie.html?modello=' + encodeURIComponent(modello) + '&colore=' + encodeURIComponent(colore);
+  });
+</script>
+</body>
+</html>
