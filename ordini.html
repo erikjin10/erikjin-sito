@@ -42,10 +42,13 @@
   .error{ color:#a3312c; }
   .table-wrap{ overflow-x:auto; border:1px solid var(--line); }
   .refresh{
-    margin-bottom:16px; padding:9px 16px; background:var(--surface); border:1px solid var(--line-strong);
+    margin-bottom:16px; margin-right:10px; padding:9px 16px; background:var(--surface); border:1px solid var(--line-strong);
     border-radius:2px; cursor:pointer; font-family:'Work Sans', sans-serif; font-size:0.85rem;
   }
   .refresh:hover{ background:var(--surface-2); }
+  td.pagato-cell{ text-align:center; }
+  .pagato-cb{ width:18px; height:18px; cursor:pointer; }
+  tr.is-paid td{ background:#eaf3e6; }
 </style>
 </head>
 <body>
@@ -63,6 +66,7 @@
   <a class="back" href="index.html">← Torna al sito</a>
   <h1>Ordini ricevuti</h1>
   <button class="refresh" id="refresh">Aggiorna elenco</button>
+  <button class="refresh" id="export-csv">Esporta CSV</button>
   <div id="result"><div class="loading">Caricamento ordini…</div></div>
 </div>
 
@@ -81,6 +85,50 @@
     return v;
   }
 
+  let currentOrders = [];
+
+  function isPaid(id){
+    try { return localStorage.getItem('pagato_' + id) === '1'; } catch(e){ return false; }
+  }
+  function setPaid(id, paid){
+    try { localStorage.setItem('pagato_' + id, paid ? '1' : '0'); } catch(e){}
+  }
+
+  function csvField(v){
+    v = (v === null || v === undefined) ? '' : v.toString();
+    if (/[",;\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+
+  function exportCSV(){
+    if (!currentOrders.length){
+      alert('Nessun ordine da esportare.');
+      return;
+    }
+    const headers = ['Data','Pagato','Modello','Colore','Cliente','Telefono','Email','Indirizzo','Città','CAP','Provincia','Note'];
+    let csv = headers.map(csvField).join(';') + '\n';
+    for (const o of currentOrders){
+      const d = o.data ? new Date(o.data) : null;
+      const dataStr = d ? d.toLocaleString('it-IT') : '';
+      const row = [
+        dataStr,
+        isPaid(o.id) ? 'Sì' : 'No',
+        val(o.modello), val(o.colore), val(o.nome), val(o.telefono), val(o.email),
+        val(o.indirizzo), val(o.citta), val(o.cap), val(o.provincia), val(o.note)
+      ];
+      csv += row.map(csvField).join(';') + '\n';
+    }
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ordini_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function loadOrders(password){
     const result = document.getElementById('result');
     result.innerHTML = '<div class="loading">Caricamento ordini…</div>';
@@ -95,17 +143,21 @@
         return { ok:true };
       }
       if (!data.length){
+        currentOrders = [];
         result.innerHTML = '<div class="empty">Nessun ordine ricevuto finora.</div>';
         return { ok:true };
       }
+      currentOrders = data;
       let html = '<div class="table-wrap"><table><thead><tr>' +
-        '<th>Data</th><th>Modello</th><th>Colore</th><th>Cliente</th><th>Telefono</th><th>Email</th>' +
+        '<th>Data</th><th>Pagato</th><th>Modello</th><th>Colore</th><th>Cliente</th><th>Telefono</th><th>Email</th>' +
         '<th>Indirizzo</th><th>Città</th><th>CAP</th><th>Prov.</th><th>Note</th></tr></thead><tbody>';
       for (const o of data){
         const d = o.data ? new Date(o.data) : null;
         const dataStr = d ? d.toLocaleString('it-IT') : '';
-        html += '<tr>' +
+        const paid = isPaid(o.id);
+        html += '<tr class="' + (paid ? 'is-paid' : '') + '">' +
           '<td>' + esc(dataStr) + '</td>' +
+          '<td class="pagato-cell"><input type="checkbox" class="pagato-cb" data-id="' + esc(o.id) + '"' + (paid ? ' checked' : '') + '></td>' +
           '<td>' + esc(val(o.modello)) + '</td>' +
           '<td>' + esc(val(o.colore)) + '</td>' +
           '<td>' + esc(val(o.nome)) + '</td>' +
@@ -120,8 +172,16 @@
       }
       html += '</tbody></table></div>';
       result.innerHTML = html;
+      result.querySelectorAll('.pagato-cb').forEach(function(cb){
+        cb.addEventListener('change', function(){
+          setPaid(this.dataset.id, this.checked);
+          const tr = this.closest('tr');
+          if (tr) tr.classList.toggle('is-paid', this.checked);
+        });
+      });
       return { ok:true };
     } catch(e){
+      currentOrders = [];
       result.innerHTML = '<div class="error">Errore di rete: ' + esc(e.message) + '</div>';
       return { ok:true };
     }
@@ -157,6 +217,8 @@
   document.getElementById('refresh').addEventListener('click', () => {
     loadOrders(sessionStorage.getItem('ordini_pw') || '');
   });
+
+  document.getElementById('export-csv').addEventListener('click', exportCSV);
 
   const saved = sessionStorage.getItem('ordini_pw');
   if (saved){
