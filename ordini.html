@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ordini — Bottega Pelle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #e3dccc; --surface: #d7cab0; --ink: #221c15; --muted: #6f6553;
+    --brass: #92722f; --brass-strong: #7a5f28; --line: rgba(34,28,21,0.16); --line-strong: rgba(34,28,21,0.32);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Work Sans', sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:1000px; margin:0 auto; padding: clamp(20px,4vw,48px) 20px; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(1.6rem,3.4vw,2.1rem); margin: 6px 0 22px; }
+  a.back{ color:var(--muted); text-decoration:none; font-size:0.9rem; }
+  a.back:hover{ color:var(--brass-strong); }
+
+  #gate{ max-width:360px; margin: 60px auto; text-align:center; }
+  #gate input{
+    width:100%; padding:12px 14px; border:1px solid var(--line-strong); font-size:1rem;
+    border-radius:2px; margin-bottom:14px; box-sizing:border-box;
+  }
+  #gate button{
+    width:100%; padding:13px; background:var(--ink); color:var(--bg); border:none;
+    font-size:0.98rem; font-weight:500; cursor:pointer; border-radius:2px;
+  }
+  #gate button:hover{ background:var(--brass-strong); }
+  #gate-error{ color:#a3312c; font-size:0.85rem; margin-top:10px; min-height:1.2em; }
+
+  table{ width:100%; border-collapse:collapse; background:#fdfbf6; font-size:0.88rem; }
+  th, td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th{
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.06em; color:var(--brass-strong); background:var(--surface);
+  }
+  tr:hover td{ background:#f4efe2; }
+  .empty, .loading, .error{ color:var(--muted); padding: 30px 0; }
+  .error{ color:#a3312c; }
+  .table-wrap{ overflow-x:auto; border:1px solid var(--line); }
+  .refresh{
+    margin-bottom:16px; padding:9px 16px; background:var(--surface); border:1px solid var(--line-strong);
+    border-radius:2px; cursor:pointer; font-family:'Work Sans', sans-serif; font-size:0.85rem;
+  }
+  .refresh:hover{ background:var(--surface-2); }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="wrap" style="padding-top:0;">
+    <h1 style="text-align:center;">Area ordini</h1>
+    <input type="password" id="pw" placeholder="Password">
+    <button id="pw-submit">Entra</button>
+    <div id="gate-error"></div>
+  </div>
+</div>
+
+<div class="wrap" id="content" hidden>
+  <a class="back" href="index.html">← Torna al sito</a>
+  <h1>Ordini ricevuti</h1>
+  <button class="refresh" id="refresh">Aggiorna elenco</button>
+  <div id="result"><div class="loading">Caricamento ordini…</div></div>
+</div>
+
+<script>
+  const gate = document.getElementById('gate');
+  const content = document.getElementById('content');
+  const pwInput = document.getElementById('pw');
+  const gateError = document.getElementById('gate-error');
+
+  function esc(s){
+    return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function loadOrders(password){
+    const result = document.getElementById('result');
+    result.innerHTML = '<div class="loading">Caricamento ordini…</div>';
+    try{
+      const res = await fetch('/.netlify/functions/get-orders?password=' + encodeURIComponent(password));
+      if (res.status === 401){
+        return { ok:false, authError:true };
+      }
+      const data = await res.json();
+      if (!res.ok){
+        result.innerHTML = '<div class="error">Errore: ' + esc(data.error || 'sconosciuto') + '</div>';
+        return { ok:true };
+      }
+      if (!data.length){
+        result.innerHTML = '<div class="empty">Nessun ordine ricevuto finora.</div>';
+        return { ok:true };
+      }
+      let html = '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Data</th><th>Modello</th><th>Colore</th><th>Cliente</th><th>Telefono</th><th>Email</th>' +
+        '<th>Indirizzo</th><th>Città</th><th>CAP</th><th>Prov.</th><th>Note</th></tr></thead><tbody>';
+      for (const o of data){
+        const d = o.data ? new Date(o.data) : null;
+        const dataStr = d ? d.toLocaleString('it-IT') : '';
+        html += '<tr>' +
+          '<td>' + esc(dataStr) + '</td>' +
+          '<td>' + esc(o.modello) + '</td>' +
+          '<td>' + esc(o.colore) + '</td>' +
+          '<td>' + esc(o.nome) + '</td>' +
+          '<td>' + esc(o.telefono) + '</td>' +
+          '<td>' + esc(o.email) + '</td>' +
+          '<td>' + esc(o.indirizzo) + '</td>' +
+          '<td>' + esc(o.citta) + '</td>' +
+          '<td>' + esc(o.cap) + '</td>' +
+          '<td>' + esc(o.provincia) + '</td>' +
+          '<td>' + esc(o.note) + '</td>' +
+        '</tr>';
+      }
+      html += '</tbody></table></div>';
+      result.innerHTML = html;
+      return { ok:true };
+    } catch(e){
+      result.innerHTML = '<div class="error">Errore di rete: ' + esc(e.message) + '</div>';
+      return { ok:true };
+    }
+  }
+
+  async function tryEnter(){
+    const password = pwInput.value;
+    gateError.textContent = '';
+    const r = await loadOrdersProbe(password);
+    if (r.authError){
+      gateError.textContent = 'Password non corretta.';
+      return;
+    }
+    sessionStorage.setItem('ordini_pw', password);
+    gate.hidden = true;
+    content.hidden = false;
+    loadOrders(password);
+  }
+
+  async function loadOrdersProbe(password){
+    try{
+      const res = await fetch('/.netlify/functions/get-orders?password=' + encodeURIComponent(password));
+      if (res.status === 401) return { authError:true };
+      return { authError:false };
+    } catch(e){
+      return { authError:false };
+    }
+  }
+
+  document.getElementById('pw-submit').addEventListener('click', tryEnter);
+  pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryEnter(); });
+
+  document.getElementById('refresh').addEventListener('click', () => {
+    loadOrders(sessionStorage.getItem('ordini_pw') || '');
+  });
+
+  const saved = sessionStorage.getItem('ordini_pw');
+  if (saved){
+    gate.hidden = true;
+    content.hidden = false;
+    loadOrders(saved);
+  }
+</script>
+</body>
+</html>
