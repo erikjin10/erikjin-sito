@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grazie — Bottega Pelle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #e3dccc; --surface: #d7cab0; --ink: #221c15; --muted: #6f6553;
+    --brass: #92722f; --brass-strong: #7a5f28; --line: rgba(34,28,21,0.16); --line-strong: rgba(34,28,21,0.32);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Work Sans', sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:600px; margin:0 auto; padding: clamp(24px,6vw,72px) 20px; text-align:center; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(1.8rem,4vw,2.5rem); margin: 10px 0 14px; }
+  p.lede{ color:var(--muted); font-size:1.02rem; line-height:1.6; max-width:46ch; margin:0 auto 28px; }
+  .summary{
+    background:var(--surface); border:1px solid var(--line); padding:18px 20px;
+    margin: 0 auto 30px; font-family:'IBM Plex Mono', monospace; font-size:0.9rem; max-width:420px;
+  }
+  .summary b{ color:var(--brass-strong); }
+  .pay-btn{
+    display:inline-flex; align-items:center; gap:10px; background:#ffc439; color:#111;
+    padding: 16px 32px; text-decoration:none; font-weight:600; font-size:1.05rem;
+    border-radius:4px; border:1px solid #e0ac00;
+  }
+  .pay-btn:hover{ background:#ffb800; }
+  .note{ margin-top:22px; font-size:0.85rem; color:var(--muted); }
+  a.back{ display:inline-block; margin-top:34px; color:var(--muted); text-decoration:none; font-size:0.9rem; }
+  a.back:hover{ color:var(--brass-strong); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Grazie per il tuo ordine!</h1>
+  <p class="lede">Abbiamo ricevuto i tuoi dati di spedizione. Per completare l'acquisto, effettua il pagamento qui sotto.</p>
+
+  <div class="summary" id="riepilogo">Caricamento…</div>
+
+  <a class="pay-btn" id="pay-link" href="#" target="_blank" rel="noopener">Paga con PayPal — €68</a>
+
+  <p class="note">Dopo il pagamento riceverai una conferma via email. Per qualsiasi domanda scrivici su WhatsApp.</p>
+  <a class="back" href="index.html">← Torna al sito</a>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const modello = params.get('modello') || 'Emily Grande';
+  const colore = params.get('colore') || '';
+  document.getElementById('riepilogo').innerHTML =
+    'Modello ordinato: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Totale da pagare: <b>€68 (spedizione inclusa)</b>';
+
+  const business = 'fashionstefanosrl@gmail.com';
+  const itemName = encodeURIComponent(modello + (colore ? ' - ' + colore : ''));
+  const payUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' + encodeURIComponent(business) +
+    '&item_name=' + itemName + '&amount=68&currency_code=EUR&no_shipping=1';
+  document.getElementById('pay-link').href = payUrl;
+</script>
+</body>
+</html>
