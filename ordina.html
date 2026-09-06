@@ -101,13 +101,15 @@
 </div>
 
 <script>
+  const PRICES = { 'Emily Large': 70, 'Emily Small': 50 };
   const params = new URLSearchParams(window.location.search);
-  const modello = params.get('modello') || 'Emily Grande';
+  const modello = params.get('modello') || 'Emily Large';
   const colore = params.get('colore') || '';
+  const prezzo = PRICES[modello] || 70;
   document.getElementById('f-modello').value = modello;
   document.getElementById('f-colore').value = colore;
   document.getElementById('riepilogo').innerHTML =
-    'Modello: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Prezzo: <b>€68 — spedizione inclusa</b>';
+    'Modello: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Prezzo: <b>€' + prezzo + ' — spedizione inclusa</b>';
 
   document.querySelector('form[name="ordine"]').addEventListener('submit', function(){
     this.action = 'grazie.html?modello=' + encodeURIComponent(modello) + '&colore=' + encodeURIComponent(colore);
