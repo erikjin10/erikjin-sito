@@ -40,23 +40,26 @@
 
   <div class="summary" id="riepilogo">Caricamento…</div>
 
-  <a class="pay-btn" id="pay-link" href="#" target="_blank" rel="noopener">Paga con PayPal — €68</a>
+  <a class="pay-btn" id="pay-link" href="#" target="_blank" rel="noopener">Paga con PayPal</a>
 
   <p class="note">Dopo il pagamento riceverai una conferma via email. Per qualsiasi domanda scrivici su WhatsApp.</p>
   <a class="back" href="index.html">← Torna al sito</a>
 </div>
 
 <script>
+  const PRICES = { 'Emily Large': 70, 'Emily Small': 50 };
   const params = new URLSearchParams(window.location.search);
-  const modello = params.get('modello') || 'Emily Grande';
+  const modello = params.get('modello') || 'Emily Large';
   const colore = params.get('colore') || '';
+  const prezzo = PRICES[modello] || 70;
   document.getElementById('riepilogo').innerHTML =
-    'Modello ordinato: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Totale da pagare: <b>€68 (spedizione inclusa)</b>';
+    'Modello ordinato: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Totale da pagare: <b>€' + prezzo + ' (spedizione inclusa)</b>';
+  document.getElementById('pay-link').textContent = 'Paga con PayPal — €' + prezzo;
 
   const business = 'fashionstefanosrl@gmail.com';
   const itemName = encodeURIComponent(modello + (colore ? ' - ' + colore : ''));
   const payUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' + encodeURIComponent(business) +
-    '&item_name=' + itemName + '&amount=68&currency_code=EUR&no_shipping=1';
+    '&item_name=' + itemName + '&amount=' + prezzo + '&currency_code=EUR&no_shipping=1';
   document.getElementById('pay-link').href = payUrl;
 </script>
 </body>
