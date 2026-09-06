@@ -48,18 +48,34 @@
 
 <script>
   const PRICES = { 'Emily Large': 70, 'Emily Small': 50 };
+  const SHIPPING_EXTRA = {
+    'Italia': 0,
+    'Francia': 10, 'Germania': 10, 'Spagna': 10, 'Portogallo': 10, 'Belgio': 10,
+    'Paesi Bassi': 10, 'Austria': 10, 'Svizzera': 10, 'Altro paese europeo': 10,
+    'Regno Unito': 30,
+    'Stati Uniti': 40, 'Canada': 40, 'Altro paese extra-UE': 40
+  };
   const params = new URLSearchParams(window.location.search);
   const modello = params.get('modello') || 'Emily Large';
   const colore = params.get('colore') || '';
-  const prezzo = PRICES[modello] || 70;
-  document.getElementById('riepilogo').innerHTML =
-    'Modello ordinato: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Totale da pagare: <b>€' + prezzo + ' (spedizione inclusa)</b>';
-  document.getElementById('pay-link').textContent = 'Paga con PayPal — €' + prezzo;
+  const paese = params.get('paese') || 'Italia';
+  const prezzoBase = PRICES[modello] || 70;
+  const extra = SHIPPING_EXTRA[paese] || 0;
+  const totale = prezzoBase + extra;
+
+  let riepilogoHtml = 'Modello ordinato: <b>' + modello + (colore ? ' — ' + colore : '') + '</b><br>Paese: <b>' + paese + '</b><br>';
+  if (extra > 0) {
+    riepilogoHtml += 'Prezzo prodotto: <b>€' + prezzoBase + '</b><br>Spedizione: <b>€' + extra + '</b><br>Totale da pagare: <b>€' + totale + '</b>';
+  } else {
+    riepilogoHtml += 'Totale da pagare: <b>€' + totale + ' (spedizione inclusa)</b>';
+  }
+  document.getElementById('riepilogo').innerHTML = riepilogoHtml;
+  document.getElementById('pay-link').textContent = 'Paga con PayPal — €' + totale;
 
   const business = 'fashionstefanosrl@gmail.com';
-  const itemName = encodeURIComponent(modello + (colore ? ' - ' + colore : ''));
+  const itemName = encodeURIComponent(modello + (colore ? ' - ' + colore : '') + (paese !== 'Italia' ? ' - spedizione ' + paese : ''));
   const payUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' + encodeURIComponent(business) +
-    '&item_name=' + itemName + '&amount=' + prezzo + '&currency_code=EUR&no_shipping=1';
+    '&item_name=' + itemName + '&amount=' + totale + '&currency_code=EUR&no_shipping=1';
   document.getElementById('pay-link').href = payUrl;
 </script>
 </body>
